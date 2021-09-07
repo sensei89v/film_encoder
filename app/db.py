@@ -31,7 +31,24 @@ class Films(Base):
         result['status'] = VideoFileStatus(result['status']).name
         return result
 
-
 def get_all_films():
     session = get_session()
-    return [x.as_dict() for x in session.query(Films).all()]
+    return session.query(Films).order_by(Films.id.desc()).all()
+
+
+def get_film(film_id):
+    session = get_session()
+    return session.query(Films).filter(Films.id == film_id).one_or_none()
+
+
+def create_new_film(name, description):
+    session = get_session()
+    film = Films(
+        name=name,
+        description=description,
+        status=VideoFileStatus.new.value,
+        path=""
+    )
+    session.add(film)
+    session.commit()
+    return film.as_dict()
