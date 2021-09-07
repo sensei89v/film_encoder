@@ -1,7 +1,11 @@
+import base64
+import os
+import yaml
 from flask import Flask, request, jsonify
 from werkzeug.exceptions import HTTPException
 
-from db import get_all_films, get_film, create_new_film
+from app.db import get_all_films, get_film, create_new_film, create_film_pieces
+from app.utils import generate_filename
 
 app = Flask(__name__)
 
@@ -54,26 +58,51 @@ def get_video(video_id):
 
     if film is None:
         # TODO: wrap to handler
-        return "Field is not found", code
+        return "Film is not found", 404
 
     return film.as_dict()
 
 
 @app.route('/api/videos/<int:video_id>/content', methods=['PUT'])
 def put_video_content(video_id):
-    return "Hello world"
+    film = get_film(video_id)
+    data = request.json
 
+    if film is None:
+        # TODO: wrap to handler
+        return "Film is not found", 404
+
+    # TODO: validation
+    piece_number = data['piece_number']
+    piece_content = data['piece_content']
+    filename = generate_filename()
+    uploaded_filename = os.path.join(app.config['upload_directory'], filename)
+    decoded = base64.b64decode(data['piece_content'])
+
+    fo = open(uploaded_filename, 'wb')
+    fo.write(decoded)
+    fo.close()
+    create_film_pieces(video_id, piece_number, len(decoded), filename)
+    # TODO: think response
+    return {}
 
 @app.route('/api/videos/<int:video_id>/content', methods=['GET'])
 def get_video_content(video_id):
     return "Hello world"
 
 
+def load_config(app, config_name):
+    try:
+        opened_file = open(config_name, 'r')
+        config = yaml.load(opened_file)
+        app.config.update(config)
+    except Exception:
+        raise ValueError(f'Error on uploading config file: {config_name}')
 
-@app.route('/', methods=['GET'])
-def hello_world():
-    return "Hello world"
+    # TODO: think maybe divide
+    upload_directory = app.config['upload_directory']
 
-
-if __name__ == '__main__':
-    app.run()
+    if os.path.exists(upload_directory):
+        pass  # TODO: generate error?
+    else:
+        os.mkdir(upload_directory)

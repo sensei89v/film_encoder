@@ -1,7 +1,7 @@
-from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-from constants import VideoFileStatus
+from app.constants import VideoFileStatus
 
 def _get_engine_settings():
     return 'sqlite:///sql.db', {}
@@ -25,11 +25,41 @@ class Films(Base):
     description = Column(String(4096))
     status = Column(Integer)
     path = Column(String(1024))
+    file_size = Column(Integer)
 
     def as_dict(self):
-        result = {c.name: getattr(self, c.name) for c in self.__table__.columns}
-        result['status'] = VideoFileStatus(result['status']).name
+        result = {
+            'id': self.id,
+            'name': self.name,
+            'description': self.description,
+            'status': VideoFileStatus(self.status).name,
+        }
         return result
+
+
+class FilmPieces(Base):
+    __tablename__ = "film_pieces"
+
+    id = Column(Integer, primary_key=True)
+    film_id = Column(Integer, ForeignKey('films.id'))
+    piece_number = Column(Integer)
+    piece_size = Column(Integer)
+    path = Column(String(1024))
+
+
+# TODO: move session to server
+def create_film_pieces(film_id, piece_number, piece_size, path):
+    session = get_session()
+    film_piece = FilmPieces(
+        film_id=film_id,
+        piece_number=piece_number,
+        piece_size=piece_size,
+        path=path
+    )
+    session.add(film_piece)
+    session.commit()
+    return film_piece
+
 
 def get_all_films():
     session = get_session()
@@ -51,4 +81,4 @@ def create_new_film(name, description):
     )
     session.add(film)
     session.commit()
-    return film.as_dict()
+    return film
