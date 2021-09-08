@@ -3,7 +3,7 @@ import os
 import yaml
 from flask import Flask, request, jsonify, g
 from werkzeug.exceptions import HTTPException
-from app.db import get_all_films, get_film, create_new_film, create_film_pieces
+from app.db import get_all_films, get_film, create_new_film, create_film_pieces, get_session
 from app.utils import generate_filename
 from app.fileutils import FileSystemFileStorage
 
@@ -42,19 +42,40 @@ def _create_error_response(name, description='', code=500):
 # Validation
 @app.route('/api/videos', methods=['GET'])
 def video_list():
-    films = get_all_films()
+    session = get_session()
+    films = get_all_films(session)
     return {"films": [x.as_dict() for x in films]}
 
 
 @app.route('/api/videos', methods=['POST'])
 def create_video():
     data = request.json
-    return create_new_film(name=data['name'], description=data['description']).as_dict()
+    session = get_session()
+    result = create_new_film(session, name=data['name'], description=data['description'], size=data.get('size'))
+    session.commit()
+    return result.as_dict()
+
+@app.route('/api/videos/<int:video_id>', methods=['PATCH'])
+def patch_video(video_id):
+    data = request.json
+    session = get_session()
+    film = get_film(session, video_id)
+
+    if film is None:
+        # TODO: wrap to handler
+        return "Film is not found", 404
+
+    # TODO: check after starting putting dataa pieces
+    # TODO: check process
+    film.size = data['size']
+    session.commit()
+    return film.as_dict()
 
 
 @app.route('/api/videos/<int:video_id>', methods=['GET'])
 def get_video(video_id):
-    film = get_film(video_id)
+    session = get_session()
+    film = get_film(session, video_id)
 
     if film is None:
         # TODO: wrap to handler
@@ -65,12 +86,18 @@ def get_video(video_id):
 
 @app.route('/api/videos/<int:video_id>/content', methods=['PUT'])
 def put_video_content(video_id):
-    film = get_film(video_id)
-    data = request.json
+    session = get_session()
+    film = get_film(session, video_id)
 
     if film is None:
         # TODO: wrap to handler
         return "Film is not found", 404
+
+    if film.size is None:
+        # TODO: wrap to handler
+        return "Film size isn't set", 404
+
+    data = request.json
 
     # TODO: validation
     piece_number = data['piece_number']
@@ -78,7 +105,8 @@ def put_video_content(video_id):
     filename = generate_filename()
     decoded = base64.b64decode(data['piece_content'])
     app.upload_starage.write(filename, decoded)
-    create_film_pieces(video_id, piece_number, len(decoded), filename)
+    create_film_pieces(session, video_id, piece_number, len(decoded), filename)
+    session.commit()
     # TODO: think response
     return {}
 
@@ -98,4 +126,6 @@ def load_config(app, config_name):
     # TODO: think maybe divide
     # TODO: implement good dependiency injection
     with app.app_context():
-        app.upload_starage = FileSystemFileStorage(app.config['upload_directory'])
+        app.upload_storage = FileSystemFileStorage(app.config['upload_storage'])
+        app.temporary_storage = FileSystemFileStorage(app.config['temporary_storage'])
+        app.result_storage = FileSystemFileStorage(app.config['result_storage'])

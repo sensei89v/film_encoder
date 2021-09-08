@@ -1,1 +1,3 @@
-upload_directory: ./upload_directory
+upload_storage: ./upload_directory
+temporary_storage: ./temporary_directory
+result_storage: ./result_directory

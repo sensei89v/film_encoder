@@ -26,6 +26,7 @@ class Films(Base):
     status = Column(Integer)
     path = Column(String(1024))
     file_size = Column(Integer)
+    size = Column(Integer, nullable=True, default=None)
 
     def as_dict(self):
         result = {
@@ -33,9 +34,9 @@ class Films(Base):
             'name': self.name,
             'description': self.description,
             'status': VideoFileStatus(self.status).name,
+            'size': self.size
         }
         return result
-
 
 class FilmPieces(Base):
     __tablename__ = "film_pieces"
@@ -48,7 +49,7 @@ class FilmPieces(Base):
 
 
 # TODO: move session to server
-def create_film_pieces(film_id, piece_number, piece_size, path):
+def create_film_pieces(session, film_id, piece_number, piece_size, path):
     session = get_session()
     film_piece = FilmPieces(
         film_id=film_id,
@@ -61,24 +62,21 @@ def create_film_pieces(film_id, piece_number, piece_size, path):
     return film_piece
 
 
-def get_all_films():
-    session = get_session()
+def get_all_films(session):
     return session.query(Films).order_by(Films.id.desc()).all()
 
 
-def get_film(film_id):
-    session = get_session()
+def get_film(session, film_id):
     return session.query(Films).filter(Films.id == film_id).one_or_none()
 
 
-def create_new_film(name, description):
-    session = get_session()
+def create_new_film(session, name, description, size=None):
     film = Films(
         name=name,
         description=description,
         status=VideoFileStatus.new.value,
-        path=""
+        path="",
+        size=size
     )
     session.add(film)
-    session.commit()
     return film
