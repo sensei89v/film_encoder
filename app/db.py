@@ -10,7 +10,7 @@ db_path, engine_settings = _get_engine_settings()
 engine = create_engine(db_path, **engine_settings)
 
 Base = declarative_base()
-Session = sessionmaker(bind=engine)
+Session = sessionmaker(bind=engine, autocommit=True)
 
 
 def get_session():

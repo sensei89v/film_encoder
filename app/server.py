@@ -51,8 +51,10 @@ def video_list():
 def create_video():
     data = request.json
     session = get_session()
-    result = create_new_film(session, name=data['name'], description=data['description'], size=data.get('size'))
-    session.commit()
+
+    with session.begin():
+        result = create_new_film(session, name=data['name'], description=data['description'], size=data.get('size'))
+
     return result.as_dict()
 
 @app.route('/api/videos/<int:video_id>', methods=['PATCH'])
@@ -67,8 +69,9 @@ def patch_video(video_id):
 
     # TODO: check after starting putting dataa pieces
     # TODO: check process
-    film.size = data['size']
-    session.commit()
+    with session.begin():
+        film.size = data['size']
+
     return film.as_dict()
 
 
@@ -105,8 +108,8 @@ def put_video_content(video_id):
     filename = generate_filename()
     decoded = base64.b64decode(data['piece_content'])
     app.upload_starage.write(filename, decoded)
-    create_film_pieces(session, video_id, piece_number, len(decoded), filename)
-    session.commit()
+    with session.begin():
+        create_film_pieces(session, video_id, piece_number, len(decoded), filename)
     # TODO: think response
     return {}
 
