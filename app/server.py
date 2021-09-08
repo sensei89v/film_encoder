@@ -3,11 +3,11 @@ import os
 import yaml
 from flask import Flask, request, jsonify, g
 from werkzeug.exceptions import HTTPException
+from app.film_converter import process_film
 from app.constants import VideoFileStatus
 from app.db import get_all_films, get_film, create_new_film, create_film_pieces, get_session
 from app.utils import generate_filename
 from app.fileutils import FileSystemFileStorage
-
 app = Flask(__name__)
 
 
@@ -117,9 +117,15 @@ def put_video_content(video_id):
     with session.begin():
         create_film_pieces(session, video_id, piece_number, len(decoded), filename)
         # TODO: think about properties
-        film.status = VideoFileStatus.in_loading.value
-        session.add(film)
+        if film.uploaded_size > film.size:
+            film.status = VideoFileStatus.failed.value
+        elif film.uploaded_size == film.size:
+            # run
+            process_film.delay(video_id)
+        else:
+            film.status = VideoFileStatus.in_loading.value
 
+        session.add(film)
     # TODO: think response
     return {}
 

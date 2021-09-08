@@ -1,3 +1,6 @@
 upload_storage: ./upload_directory
 temporary_storage: ./temporary_directory
 result_storage: ./result_directory
+
+database: sqlite:///sql.db
+celery_broker_url: redis://localhost:6379

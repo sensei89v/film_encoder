@@ -1,10 +1,11 @@
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 
 from app.constants import VideoFileStatus
 
 def _get_engine_settings():
     return 'sqlite:///sql.db', {}
+
 
 db_path, engine_settings = _get_engine_settings()
 engine = create_engine(db_path, **engine_settings)
@@ -37,6 +38,13 @@ class Films(Base):
             'size': self.size
         }
         return result
+
+    film_pieces = relationship("FilmPieces")
+
+    @property
+    def uploaded_size(self):
+        return sum([x.piece_size for x in self.film_pieces])
+
 
 class FilmPieces(Base):
     __tablename__ = "film_pieces"
