@@ -1,11 +1,11 @@
 import base64
 import os
 import yaml
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, g
 from werkzeug.exceptions import HTTPException
-
 from app.db import get_all_films, get_film, create_new_film, create_film_pieces
 from app.utils import generate_filename
+from app.fileutils import FileSystemFileStorage
 
 app = Flask(__name__)
 
@@ -76,12 +76,8 @@ def put_video_content(video_id):
     piece_number = data['piece_number']
     piece_content = data['piece_content']
     filename = generate_filename()
-    uploaded_filename = os.path.join(app.config['upload_directory'], filename)
     decoded = base64.b64decode(data['piece_content'])
-
-    fo = open(uploaded_filename, 'wb')
-    fo.write(decoded)
-    fo.close()
+    app.upload_starage.write(filename, decoded)
     create_film_pieces(video_id, piece_number, len(decoded), filename)
     # TODO: think response
     return {}
@@ -100,9 +96,6 @@ def load_config(app, config_name):
         raise ValueError(f'Error on uploading config file: {config_name}')
 
     # TODO: think maybe divide
-    upload_directory = app.config['upload_directory']
-
-    if os.path.exists(upload_directory):
-        pass  # TODO: generate error?
-    else:
-        os.mkdir(upload_directory)
+    # TODO: implement good dependiency injection
+    with app.app_context():
+        app.upload_starage = FileSystemFileStorage(app.config['upload_directory'])
