@@ -50,7 +50,6 @@ class FilmPieces(Base):
 
 # TODO: move session to server
 def create_film_pieces(session, film_id, piece_number, piece_size, path):
-    session = get_session()
     film_piece = FilmPieces(
         film_id=film_id,
         piece_number=piece_number,
@@ -58,7 +57,6 @@ def create_film_pieces(session, film_id, piece_number, piece_size, path):
         path=path
     )
     session.add(film_piece)
-    session.commit()
     return film_piece
 
 

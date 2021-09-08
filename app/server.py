@@ -3,6 +3,7 @@ import os
 import yaml
 from flask import Flask, request, jsonify, g
 from werkzeug.exceptions import HTTPException
+from app.constants import VideoFileStatus
 from app.db import get_all_films, get_film, create_new_film, create_film_pieces, get_session
 from app.utils import generate_filename
 from app.fileutils import FileSystemFileStorage
@@ -39,7 +40,7 @@ def _create_error_response(name, description='', code=500):
 
 
 # ######### routing
-# Validation
+# TODO: Validation
 @app.route('/api/videos', methods=['GET'])
 def video_list():
     session = get_session()
@@ -53,9 +54,10 @@ def create_video():
     session = get_session()
 
     with session.begin():
-        result = create_new_film(session, name=data['name'], description=data['description'], size=data.get('size'))
+        film = create_new_film(session, name=data['name'], description=data['description'], size=data.get('size'))
 
-    return result.as_dict()
+    return film.as_dict()
+
 
 @app.route('/api/videos/<int:video_id>', methods=['PATCH'])
 def patch_video(video_id):
@@ -71,6 +73,7 @@ def patch_video(video_id):
     # TODO: check process
     with session.begin():
         film.size = data['size']
+        session.add(film)
 
     return film.as_dict()
 
@@ -98,20 +101,28 @@ def put_video_content(video_id):
 
     if film.size is None:
         # TODO: wrap to handler
-        return "Film size isn't set", 404
+        return "Film size isn't set", 400
+
+    if film.status not in (VideoFileStatus.in_loading.value, VideoFileStatus.new.value):
+        # TODO: wrap to handler
+        return "Film isn't in right status", 400
 
     data = request.json
-
     # TODO: validation
     piece_number = data['piece_number']
     piece_content = data['piece_content']
     filename = generate_filename()
     decoded = base64.b64decode(data['piece_content'])
-    app.upload_starage.write(filename, decoded)
+    app.upload_storage.write(filename, decoded)
     with session.begin():
         create_film_pieces(session, video_id, piece_number, len(decoded), filename)
+        # TODO: think about properties
+        film.status = VideoFileStatus.in_loading.value
+        session.add(film)
+
     # TODO: think response
     return {}
+
 
 @app.route('/api/videos/<int:video_id>/content', methods=['GET'])
 def get_video_content(video_id):
