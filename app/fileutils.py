@@ -1,5 +1,5 @@
 import os
-
+from app.config import load_config
 
 class IFileStorage:
     def read(self, filename):
@@ -42,3 +42,10 @@ class FileSystemFileStorage(IFileStorage):
     def delete(self, filename):
         storage_filename = self._get_full_file_name(filename)
         os.remove(storage_filename)
+
+
+_config = load_config()
+
+upload_storage = FileSystemFileStorage(_config['upload_storage'])
+temporary_storage = FileSystemFileStorage(_config['temporary_storage'])
+result_storage = FileSystemFileStorage(_config['result_storage'])

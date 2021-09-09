@@ -2,13 +2,12 @@ from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 
 from app.constants import VideoFileStatus
+from app.config import load_config
 
-def _get_engine_settings():
-    return 'sqlite:///sql.db', {}
+_config = load_config()
 
-
-db_path, engine_settings = _get_engine_settings()
-engine = create_engine(db_path, **engine_settings)
+db_path = _config['database']
+engine = create_engine(db_path)
 
 Base = declarative_base()
 Session = sessionmaker(bind=engine, autocommit=True)

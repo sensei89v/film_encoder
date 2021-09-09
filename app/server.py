@@ -7,7 +7,8 @@ from app.film_converter import process_film
 from app.constants import VideoFileStatus
 from app.db import get_all_films, get_film, create_new_film, create_film_pieces, get_session
 from app.utils import generate_filename
-from app.fileutils import FileSystemFileStorage
+from app.fileutils import upload_storage
+
 app = Flask(__name__)
 
 
@@ -113,7 +114,7 @@ def put_video_content(video_id):
     piece_content = data['piece_content']
     filename = generate_filename()
     decoded = base64.b64decode(data['piece_content'])
-    app.upload_storage.write(filename, decoded)
+    upload_storage.write(filename, decoded)
     with session.begin():
         create_film_pieces(session, video_id, piece_number, len(decoded), filename)
         # TODO: think about properties
@@ -133,19 +134,3 @@ def put_video_content(video_id):
 @app.route('/api/videos/<int:video_id>/content', methods=['GET'])
 def get_video_content(video_id):
     return "Hello world"
-
-
-def load_config(app, config_name):
-    try:
-        opened_file = open(config_name, 'r')
-        config = yaml.load(opened_file)
-        app.config.update(config)
-    except Exception:
-        raise ValueError(f'Error on uploading config file: {config_name}')
-
-    # TODO: think maybe divide
-    # TODO: implement good dependiency injection
-    with app.app_context():
-        app.upload_storage = FileSystemFileStorage(app.config['upload_storage'])
-        app.temporary_storage = FileSystemFileStorage(app.config['temporary_storage'])
-        app.result_storage = FileSystemFileStorage(app.config['result_storage'])
