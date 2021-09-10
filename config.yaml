@@ -4,3 +4,8 @@ result_storage: ./result_directory
 
 database: sqlite:///sql.db
 celery_broker_url: redis://localhost:6379
+
+encode_settings:
+  common_options:
+  infile_options:
+  outfile_options: "-ab 128 -f mp4"

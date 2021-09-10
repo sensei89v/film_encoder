@@ -8,6 +8,9 @@ class IFileStorage:
     def write(self, filename, data):
         raise NotImplementedError
 
+    def append(self, filename, data):
+        raise NotImplementedError
+
     def delete(self, filename):
         raise NotImplementedError
 
@@ -22,25 +25,31 @@ class FileSystemFileStorage(IFileStorage):
             os.mkdir(self._directory_name)
 
     # TODO: errors
-    def _get_full_file_name(self, filename):
+    def get_full_filename(self, filename):
         return os.path.join(self._directory_name, filename)
 
     # TODO: What if we have a giant file
     def read(self, filename):
-        storage_filename = self._get_full_file_name(filename)
+        storage_filename = self.get_full_filename(filename)
         fi = open(storage_filename, 'rb')
-        result = fi.read(data)
+        result = fi.read()
         fi.close()
         return result
 
     def write(self, filename, data):
-        storage_filename = self._get_full_file_name(filename)
+        storage_filename = self.get_full_filename(filename)
         fo = open(storage_filename, 'wb')
         fo.write(data)
         fo.close()
 
+    def append(self, filename, data):
+        storage_filename = self.get_full_filename(filename)
+        fo = open(storage_filename, 'ab')
+        fo.write(data)
+        fo.close()
+
     def delete(self, filename):
-        storage_filename = self._get_full_file_name(filename)
+        storage_filename = self.get_full_filename(filename)
         os.remove(storage_filename)
 
 

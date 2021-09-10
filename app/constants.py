@@ -4,8 +4,7 @@ import enum
 class VideoFileStatus(enum.Enum):
     new = enum.auto()
     in_loading = enum.auto()
-    loaded = enum.auto()
-    in_encoding = enum.auto()
+    in_process = enum.auto()
     success = enum.auto()
     failed = enum.auto()
 

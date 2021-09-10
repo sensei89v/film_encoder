@@ -38,6 +38,7 @@ class Films(Base):
         }
         return result
 
+    # TODO: orm lazy load
     film_pieces = relationship("FilmPieces")
 
     @property

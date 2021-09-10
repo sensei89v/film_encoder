@@ -4,6 +4,7 @@ import yaml
 
 def load_config():
     config_name = os.environ.get('CONFIG_FILE', 'config.yaml')
+
     try:
         opened_file = open(config_name, 'r')
         config = yaml.load(opened_file)

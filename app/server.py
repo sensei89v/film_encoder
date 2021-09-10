@@ -1,7 +1,5 @@
 import base64
-import os
-import yaml
-from flask import Flask, request, jsonify, g
+from flask import Flask, request, jsonify
 from werkzeug.exceptions import HTTPException
 from app.film_converter import process_film
 from app.constants import VideoFileStatus
@@ -113,7 +111,7 @@ def put_video_content(video_id):
     piece_number = data['piece_number']
     piece_content = data['piece_content']
     filename = generate_filename()
-    decoded = base64.b64decode(data['piece_content'])
+    decoded = base64.b64decode(piece_content)
     upload_storage.write(filename, decoded)
     with session.begin():
         create_film_pieces(session, video_id, piece_number, len(decoded), filename)
@@ -122,6 +120,7 @@ def put_video_content(video_id):
             film.status = VideoFileStatus.failed.value
         elif film.uploaded_size == film.size:
             # run
+            film.status = VideoFileStatus.in_process.value
             process_film.delay(video_id)
         else:
             film.status = VideoFileStatus.in_loading.value
