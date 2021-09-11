@@ -33,9 +33,12 @@ def _clean_all_temporary_files(session, film):
         upload_storage.delete(film_piece.path)
 
     session.query(FilmPieces).filter(FilmPieces.film_id == film.id).delete()
+    session.refresh(film)
+    #from celery.contrib import rdb
+    #rdb.set_trace()
+    #film.update(session)
 
 
-# ffprobe  -show_streams -print_format json  ~/Downloads/1.mp4 2>/dev/null
 def _check_video_file(full_filename):
     ffprobe_result = subprocess.run([f"ffprobe -show_streams -print_format json {full_filename}"], shell=True, capture_output=True)
 
@@ -60,14 +63,11 @@ def _check_video_file(full_filename):
 
 
 def _convert_video_file(input_filename, output_filename):
-    logger.info(f"ffmpeg {_common_options} {_infile_options} -i {input_filename} {_outfile_options} {output_filename}")
     ffmpeg_result = subprocess.run(
         [f"ffmpeg {_common_options} {_infile_options} -i {input_filename} {_outfile_options} {output_filename}"],
         shell=True,
         capture_output=True
     )
-    logger.info(ffmpeg_result.stdout)
-    logger.info(ffmpeg_result.stderr)
     return ffmpeg_result.returncode == 0
 
 
@@ -115,10 +115,10 @@ def process_film(video_id):
 
             if not _convert_video_file(full_new_filename, full_converted_filename):
                 # TODO: fix it
-                #temporary_storage.delete(new_filename)
-                #temporary_storage.delete(converted_filename)
-                #_clean_all_temporary_files(session, film)
-                #film.status = VideoFileStatus.failed.value
+                temporary_storage.delete(new_filename)
+                temporary_storage.delete(converted_filename)
+                _clean_all_temporary_files(session, film)
+                film.status = VideoFileStatus.failed.value
                 session.add(film)
                 return
 
@@ -135,6 +135,7 @@ def process_film(video_id):
             film.path = converted_data
             session.add(film)
         except Exception as e:
-            logger.exception(e)
-            film.status = VideoFileStatus.failed.value
-            session.add(film)
+            #logger.exception(e)
+            #film.status = VideoFileStatus.failed.value
+            #session.add(film)
+            raise e

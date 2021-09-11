@@ -26,7 +26,7 @@ If you feel yourself comfortable with Gitlab CI and app deployment to cloud prov
  * Debug convertation
  * Add download stupid
  * Add download extend
- * Add Readme
+ * Add Readme description
  * Add swagger
  * Add error handler
- * Add one time loading of config file
+ * Add comments

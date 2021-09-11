@@ -119,22 +119,28 @@ def put_video_content(video_id):
     filename = generate_filename()
     decoded = base64.b64decode(piece_content)
     upload_storage.write(filename, decoded)
+    run_convert = False
+
     with session.begin():
         create_film_pieces(session, video_id, piece_number, len(decoded), filename)
+        session.refresh(film)
         # TODO: think about properties
         if film.uploaded_size > film.size:
             film.status = VideoFileStatus.failed.value
         elif film.uploaded_size == film.size:
             # run
             film.status = VideoFileStatus.in_process.value
-            process_film.delay(video_id)
+            run_convert = True
         else:
             film.status = VideoFileStatus.in_loading.value
 
         session.add(film)
+
+    if run_convert:
+        process_film.delay(video_id)
+
     # TODO: think response
     return {}
-
 
 @app.route('/api/videos/<int:video_id>/content', methods=['GET'])
 def get_video_content(video_id):

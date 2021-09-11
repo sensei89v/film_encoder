@@ -39,7 +39,7 @@ class Films(Base):
         return result
 
     # TODO: orm lazy load
-    film_pieces = relationship("FilmPieces")
+    film_pieces = relationship("FilmPieces", lazy='joined', passive_deletes=True)
 
     @property
     def uploaded_size(self):
