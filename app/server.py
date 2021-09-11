@@ -1,6 +1,7 @@
 import base64
 import io
-from flask import Flask, request, jsonify, make_response, send_file
+from typing import Dict
+from flask import Flask, Response, request, jsonify, make_response, send_file
 from werkzeug.exceptions import HTTPException
 from app.film_converter import process_film
 from app.config import load_config
@@ -15,16 +16,16 @@ app = Flask(__name__)
 RETURN_MIMETYPE = load_config()['return_video_mimetype']
 RETURN_FILE_EXTENSION = load_config()['return_video_file_extension']
 # ######### error handling
-def _create_error_response(name, description='', code=500):
-    """
-    Common error function
-    """
-    response = {
-        "code": code,
-        "name": name,
-        "description": description
-    }
-    return jsonify(response), code
+#def _create_error_response(name, description='', code=500):
+#    """
+#    Common error function
+#    """
+#    response = {
+#        "code": code,
+#        "name": name,
+#        "description": description
+#    }
+#    return jsonify(response), code
 
 
 #@app.errorhandler(HTTPException)
@@ -45,7 +46,7 @@ def _create_error_response(name, description='', code=500):
 # ######### routing
 # TODO: Validation
 @app.route('/api/videos', methods=['GET'])
-def video_list():
+def video_list() -> Dict:
     data = request.args
     schema = GetListSchema(**data)
     session = get_session()
@@ -54,7 +55,7 @@ def video_list():
 
 
 @app.route('/api/videos', methods=['POST'])
-def create_video():
+def create_video() -> Dict:
     data = request.json
     schema = CreateFilmSchema(**data)
     session = get_session()
@@ -66,7 +67,7 @@ def create_video():
 
 
 @app.route('/api/videos/<int:video_id>', methods=['PATCH'])
-def patch_video(video_id):
+def patch_video(video_id: int) -> Dict:
     data = request.json
     schema = PatchFilmSchema(**data)
 
@@ -87,7 +88,7 @@ def patch_video(video_id):
 
 
 @app.route('/api/videos/<int:video_id>', methods=['GET'])
-def get_video(video_id):
+def get_video(video_id: int) -> Dict:
     session = get_session()
     film = get_film(session, video_id)
 
@@ -99,7 +100,7 @@ def get_video(video_id):
 
 
 @app.route('/api/videos/<int:video_id>/content', methods=['PUT'])
-def put_video_content(video_id):
+def put_video_content(video_id: int) -> Dict:
     session = get_session()
     data = request.json
     schema = PutVideoSchema(**data)
@@ -145,8 +146,9 @@ def put_video_content(video_id):
     # TODO: think response
     return {}
 
+
 @app.route('/api/videos/<int:video_id>/content', methods=['GET'])
-def get_video_content(video_id):
+def get_video_content(video_id: int) -> Response:
     session = get_session()
     data = request.json
     film = get_film(session, video_id)

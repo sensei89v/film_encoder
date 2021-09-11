@@ -1,9 +1,12 @@
+from typing import Dict
 import os
 import yaml
 
+
 _config = None
 
-def _load_config():
+
+def _load_config() -> Dict:
     config_name = os.environ.get('CONFIG_FILE', 'config.yaml')
 
     try:
@@ -15,7 +18,7 @@ def _load_config():
         raise ValueError(f'Error on uploading config file: {config_name}')
 
 
-def load_config():
+def load_config() -> Dict:
     global _config
     if _config is None:
         _config = _load_config()

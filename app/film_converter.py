@@ -2,9 +2,10 @@ import json
 import logging
 import subprocess
 
+
 from app.celery import celery_app
 from app.constants import VideoFileStatus
-from app.db import FilmPieces, get_session, get_film
+from app.db import FilmPieces, get_session, get_film, Session, Films
 from app.fileutils import upload_storage, temporary_storage, result_storage
 from app.config import load_config
 from app.utils import generate_filename
@@ -28,18 +29,15 @@ _infile_options = _get_option('infile_options')
 _outfile_options = _get_option('outfile_options')
 
 
-def _clean_all_temporary_files(session, film):
+def _clean_all_temporary_files(session: Session, film: Films) -> None:
     for film_piece in film.film_pieces:
         upload_storage.delete(film_piece.path)
 
     session.query(FilmPieces).filter(FilmPieces.film_id == film.id).delete()
     session.refresh(film)
-    #from celery.contrib import rdb
-    #rdb.set_trace()
-    #film.update(session)
 
 
-def _check_video_file(full_filename):
+def _check_video_file(full_filename: str) -> bool:
     ffprobe_result = subprocess.run([f"ffprobe -show_streams -print_format json {full_filename}"], shell=True, capture_output=True)
 
     if ffprobe_result.returncode != 0:
@@ -62,7 +60,7 @@ def _check_video_file(full_filename):
     return video_stream_count == 1 and audio_stream_count > 0
 
 
-def _convert_video_file(input_filename, output_filename):
+def _convert_video_file(input_filename: str, output_filename: str) -> bool:
     ffmpeg_result = subprocess.run(
         [f"ffmpeg {_common_options} {_infile_options} -i {input_filename} {_outfile_options} {output_filename}"],
         shell=True,
@@ -72,7 +70,7 @@ def _convert_video_file(input_filename, output_filename):
 
 
 @celery_app.task()
-def process_film(video_id):
+def process_film(video_id: int) -> None:
     session = get_session()
 
     film = get_film(session, video_id)

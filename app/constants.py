@@ -7,4 +7,3 @@ class VideoFileStatus(enum.Enum):
     in_process = enum.auto()
     success = enum.auto()
     failed = enum.auto()
-

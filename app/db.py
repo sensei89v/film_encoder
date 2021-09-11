@@ -1,3 +1,4 @@
+from typing import Dict, List
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 
@@ -13,7 +14,7 @@ Base = declarative_base()
 Session = sessionmaker(bind=engine, autocommit=True)
 
 
-def get_session():
+def get_session() -> Session:
     return Session()
 
 
@@ -28,7 +29,7 @@ class Films(Base):
     file_size = Column(Integer)
     size = Column(Integer, nullable=True, default=None)
 
-    def as_dict(self):
+    def as_dict(self) -> Dict:
         result = {
             'id': self.id,
             'name': self.name,
@@ -42,7 +43,7 @@ class Films(Base):
     film_pieces = relationship("FilmPieces", lazy='joined', passive_deletes=True)
 
     @property
-    def uploaded_size(self):
+    def uploaded_size(self) -> int:
         return sum([x.piece_size for x in self.film_pieces])
 
 
@@ -57,7 +58,7 @@ class FilmPieces(Base):
 
 
 # TODO: move session to server
-def create_film_pieces(session, film_id, piece_number, piece_size, path):
+def create_film_pieces(session: Session, film_id: int, piece_number: int, piece_size: int, path: str) -> FilmPieces:
     film_piece = FilmPieces(
         film_id=film_id,
         piece_number=piece_number,
@@ -68,7 +69,7 @@ def create_film_pieces(session, film_id, piece_number, piece_size, path):
     return film_piece
 
 
-def get_all_films(session, start, count):
+def get_all_films(session: Session, start: int, count: int) -> List[Films]:
     query = session.query(Films).order_by(Films.id.desc())
 
     if start is not None:
@@ -80,11 +81,11 @@ def get_all_films(session, start, count):
     return query.all()
 
 
-def get_film(session, film_id):
+def get_film(session: Session, film_id: int) -> Films:
     return session.query(Films).filter(Films.id == film_id).one_or_none()
 
 
-def create_new_film(session, name, description, size=None):
+def create_new_film(session: Session, name: str, description: str, size: int = None) -> Films:
     film = Films(
         name=name,
         description=description,
