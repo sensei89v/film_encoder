@@ -7,8 +7,7 @@ from app.film_converter import process_film
 from app.config import load_config
 from app.constants import VideoFileStatus
 from app.db import get_all_films, get_film, create_new_film, create_film_pieces, get_session
-from app.utils import generate_filename
-from app.fileutils import upload_storage, result_storage
+from app.fileutils import upload_storage, result_storage, generate_filename
 from app.schemas import GetListSchema, CreateFilmSchema, PatchFilmSchema, PutVideoSchema
 
 app = Flask(__name__)

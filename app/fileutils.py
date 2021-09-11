@@ -1,5 +1,10 @@
+import uuid
 import os
 from app.config import load_config
+
+
+def generate_filename() -> str:
+    return uuid.uuid4().hex
 
 
 class IFileStorage:

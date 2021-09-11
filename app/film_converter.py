@@ -6,9 +6,8 @@ import subprocess
 from app.celery import celery_app
 from app.constants import VideoFileStatus
 from app.db import FilmPieces, get_session, get_film, Session, Films
-from app.fileutils import upload_storage, temporary_storage, result_storage
+from app.fileutils import upload_storage, temporary_storage, result_storage, generate_filename
 from app.config import load_config
-from app.utils import generate_filename
 
 
 logger = logging.getLogger()
