@@ -1,16 +1,19 @@
 import base64
-from flask import Flask, request, jsonify
+import io
+from flask import Flask, request, jsonify, make_response, send_file
 from werkzeug.exceptions import HTTPException
 from app.film_converter import process_film
+from app.config import load_config
 from app.constants import VideoFileStatus
 from app.db import get_all_films, get_film, create_new_film, create_film_pieces, get_session
 from app.utils import generate_filename
-from app.fileutils import upload_storage
+from app.fileutils import upload_storage, result_storage
 from app.schemas import GetListSchema, CreateFilmSchema, PatchFilmSchema, PutVideoSchema
 
 app = Flask(__name__)
 
-
+RETURN_MIMETYPE = load_config()['return_video_mimetype']
+RETURN_FILE_EXTENSION = load_config()['return_video_file_extension']
 # ######### error handling
 def _create_error_response(name, description='', code=500):
     """
@@ -144,4 +147,21 @@ def put_video_content(video_id):
 
 @app.route('/api/videos/<int:video_id>/content', methods=['GET'])
 def get_video_content(video_id):
-    return "Hello world"
+    session = get_session()
+    data = request.json
+    film = get_film(session, video_id)
+
+    if film is None:
+        return "Video not found", 404
+
+    if film.status != VideoFileStatus.success.value:
+        return "Video not found", 404
+
+    data = result_storage.read(film.path)
+
+    return send_file(
+        io.BytesIO(data),
+        mimetype=RETURN_MIMETYPE,
+        as_attachment=True,
+        attachment_filename=f'{film.path}.{RETURN_FILE_EXTENSION}'
+    )

@@ -132,7 +132,7 @@ def process_film(video_id):
             temporary_storage.delete(converted_filename)
             _clean_all_temporary_files(session, film)
             film.status = VideoFileStatus.success.value
-            film.path = converted_filename
+            film.path = result_filename
             session.add(film)
         except Exception as e:
             session.rollback()

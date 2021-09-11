@@ -23,10 +23,10 @@ If you feel yourself comfortable with Gitlab CI and app deployment to cloud prov
  * Add tests
  * Add init db
  * Add config to run script
- * Debug convertation
- * Add download stupid
  * Add download extend
  * Add Readme description
  * Add swagger
  * Add error handler
  * Add comments
+ * Add Responses as classes
+ * Add filename from film

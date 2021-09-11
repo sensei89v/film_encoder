@@ -7,6 +7,8 @@ celery_broker_url: redis://localhost:6379
 # 40 MB
 max_film_size: 41943040
 
+return_video_mimetype: "video/mp4"
+return_video_file_extension: "video/mp4"
 
 encode_settings:
   common_options:

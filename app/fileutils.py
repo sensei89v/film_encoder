@@ -50,7 +50,9 @@ class FileSystemFileStorage(IFileStorage):
 
     def delete(self, filename):
         storage_filename = self.get_full_filename(filename)
-        os.remove(storage_filename)
+
+        if os.path.exists(storage_filename):
+            os.remove(storage_filename)
 
 
 _config = load_config()
