@@ -68,8 +68,16 @@ def create_film_pieces(session, film_id, piece_number, piece_size, path):
     return film_piece
 
 
-def get_all_films(session):
-    return session.query(Films).order_by(Films.id.desc()).all()
+def get_all_films(session, start, count):
+    query = session.query(Films).order_by(Films.id.desc())
+
+    if start is not None:
+        query = query.offset(start)
+
+    if count is not None:
+        query = query.limit(count)
+
+    return query.all()
 
 
 def get_film(session, film_id):

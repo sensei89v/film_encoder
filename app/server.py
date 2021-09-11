@@ -6,6 +6,7 @@ from app.constants import VideoFileStatus
 from app.db import get_all_films, get_film, create_new_film, create_film_pieces, get_session
 from app.utils import generate_filename
 from app.fileutils import upload_storage
+from app.schemas import GetListSchema, CreateFilmSchema, PatchFilmSchema, PutVideoSchema
 
 app = Flask(__name__)
 
@@ -42,18 +43,21 @@ def _create_error_response(name, description='', code=500):
 # TODO: Validation
 @app.route('/api/videos', methods=['GET'])
 def video_list():
+    data = request.args
+    schema = GetListSchema(**data)
     session = get_session()
-    films = get_all_films(session)
+    films = get_all_films(session, start=schema.start, count=schema.count)
     return {"films": [x.as_dict() for x in films]}
 
 
 @app.route('/api/videos', methods=['POST'])
 def create_video():
     data = request.json
+    schema = CreateFilmSchema(**data)
     session = get_session()
 
     with session.begin():
-        film = create_new_film(session, name=data['name'], description=data['description'], size=data.get('size'))
+        film = create_new_film(session, name=schema.name, description=schema.description, size=schema.size)
 
     return film.as_dict()
 
@@ -61,6 +65,8 @@ def create_video():
 @app.route('/api/videos/<int:video_id>', methods=['PATCH'])
 def patch_video(video_id):
     data = request.json
+    schema = PatchFilmSchema(**data)
+
     session = get_session()
     film = get_film(session, video_id)
 
@@ -71,7 +77,7 @@ def patch_video(video_id):
     # TODO: check after starting putting dataa pieces
     # TODO: check process
     with session.begin():
-        film.size = data['size']
+        film.size = schema.size
         session.add(film)
 
     return film.as_dict()
@@ -92,6 +98,8 @@ def get_video(video_id):
 @app.route('/api/videos/<int:video_id>/content', methods=['PUT'])
 def put_video_content(video_id):
     session = get_session()
+    data = request.json
+    schema = PutVideoSchema(**data)
     film = get_film(session, video_id)
 
     if film is None:
@@ -106,10 +114,8 @@ def put_video_content(video_id):
         # TODO: wrap to handler
         return "Film isn't in right status", 400
 
-    data = request.json
-    # TODO: validation
-    piece_number = data['piece_number']
-    piece_content = data['piece_content']
+    piece_number = schema.piece_number
+    piece_content = schema.piece_content
     filename = generate_filename()
     decoded = base64.b64decode(piece_content)
     upload_storage.write(filename, decoded)

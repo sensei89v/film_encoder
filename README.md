@@ -16,3 +16,17 @@ The application should be bundled into Docker image with instructions on how to 
 The source code should be uploaded to GitLab or GitHub.
 If your application requires additional services (e.g. database server, storage server, application workers), please provide Docker-compose file to run the app and dependencies all together.
 If you feel yourself comfortable with Gitlab CI and app deployment to cloud providers, you can optionally create GitLab pipeline configuration for building Docker image, pushing it to registry and deploying the app using cloud-provider of your choice (e.g. Google Cloud Platform, Amazon AWS, Heroku)
+
+
+# TODO:
+ * Deploy to clouds
+ * Add tests
+ * Add init db
+ * Add config to run script
+ * Debug convertation
+ * Add download stupid
+ * Add download extend
+ * Add constants of size
+ * Add Readme
+ * Add swagger
+ * Add error handler
