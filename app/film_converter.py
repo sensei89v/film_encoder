@@ -89,8 +89,8 @@ def process_film(video_id):
             sorted_film_pieces_ids = [x.piece_number for x in sorted_film_pieces]
 
             if sorted_film_pieces_ids[0] != 0 or \
-            sorted_film_pieces_ids[-1] != len(sorted_film_pieces_ids) - 1 or \
-            len(sorted_film_pieces_ids) != len(set(sorted_film_pieces_ids)):
+               sorted_film_pieces_ids[-1] != len(sorted_film_pieces_ids) - 1 or \
+               len(sorted_film_pieces_ids) != len(set(sorted_film_pieces_ids)):
                 _clean_all_temporary_files(session, film)
                 film.status = VideoFileStatus.failed.value
                 session.add(film)
@@ -132,10 +132,11 @@ def process_film(video_id):
             temporary_storage.delete(converted_filename)
             _clean_all_temporary_files(session, film)
             film.status = VideoFileStatus.success.value
-            film.path = converted_data
+            film.path = converted_filename
             session.add(film)
         except Exception as e:
-            #logger.exception(e)
-            #film.status = VideoFileStatus.failed.value
-            #session.add(film)
-            raise e
+            session.rollback()
+            session.refresh(film)
+            logger.exception(e)
+            film.status = VideoFileStatus.failed.value
+            session.add(film)
