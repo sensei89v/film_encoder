@@ -22,7 +22,6 @@ If you feel yourself comfortable with Gitlab CI and app deployment to cloud prov
  * Deploy to clouds
  * Add tests
  * Add init db
- * Add config to run script
  * Add download extend
  * Add Readme description
  * Add swagger
@@ -30,3 +29,5 @@ If you feel yourself comfortable with Gitlab CI and app deployment to cloud prov
  * Add comments
  * Add Responses as classes
  * Add filename from film
+ * Add typing
+
