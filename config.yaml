@@ -4,6 +4,9 @@ result_storage: ./result_directory
 
 database: sqlite:///sql.db
 celery_broker_url: redis://localhost:6379
+# 40 MB
+max_film_size: 41943040
+
 
 encode_settings:
   common_options:
