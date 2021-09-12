@@ -3,6 +3,10 @@ import os
 from app.config import load_config
 
 
+class FileUtilsException(Exception):
+    pass
+
+
 def generate_filename() -> str:
     return uuid.uuid4().hex
 
@@ -38,23 +42,32 @@ class FileSystemFileStorage(IFileStorage):
 
     # TODO: What if we have a giant file
     def read(self, filename: str) -> bytes:
-        storage_filename = self.get_full_filename(filename)
-        fi = open(storage_filename, 'rb')
-        result = fi.read()
-        fi.close()
-        return result
+        try:
+            storage_filename = self.get_full_filename(filename)
+            fi = open(storage_filename, 'rb')
+            result = fi.read()
+            fi.close()
+            return result
+        except Exception as e:
+            raise FileUtilsException(f"Error on reading {filename}")
 
     def write(self, filename: str, data: bytes) -> None:
-        storage_filename = self.get_full_filename(filename)
-        fo = open(storage_filename, 'wb')
-        fo.write(data)
-        fo.close()
+        try:
+            storage_filename = self.get_full_filename(filename)
+            fo = open(storage_filename, 'wb')
+            fo.write(data)
+            fo.close()
+        except Exception as e:
+            raise FileUtilsException(f"Error on writing {filename}")
 
     def append(self, filename: str, data: bytes) -> None:
-        storage_filename = self.get_full_filename(filename)
-        fo = open(storage_filename, 'ab')
-        fo.write(data)
-        fo.close()
+        try:
+            storage_filename = self.get_full_filename(filename)
+            fo = open(storage_filename, 'ab')
+            fo.write(data)
+            fo.close()
+        except Exception as e:
+            raise FileUtilsException(f"Error on appending {filename}")
 
     def delete(self, filename: str) -> None:
         storage_filename = self.get_full_filename(filename)

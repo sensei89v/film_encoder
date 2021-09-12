@@ -29,3 +29,4 @@ If you feel yourself comfortable with Gitlab CI and app deployment to cloud prov
  * Add comments
  * Add http Responses as classes
  * Add filename from film
+ * Sync names" videos and film
