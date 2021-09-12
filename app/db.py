@@ -25,7 +25,7 @@ class Films(Base):
     name = Column(String(1024))
     description = Column(String(4096))
     status = Column(Integer)
-    path = Column(String(1024))
+    path = Column(String(1024), nullable=True, default=None)
     file_size = Column(Integer)
     size = Column(Integer, nullable=True, default=None)
 
@@ -39,12 +39,39 @@ class Films(Base):
         }
         return result
 
-    # TODO: orm lazy load
     film_pieces = relationship("FilmPieces", lazy='joined', passive_deletes=True)
 
     @property
     def uploaded_size(self) -> int:
-        return sum([x.piece_size for x in self.film_pieces])
+        return sum([x.size for x in self.film_pieces])
+
+    @classmethod
+    def get_all_films(cls, session: Session, start: int, count: int) -> List["Films"]:
+        query = session.query(cls).order_by(Films.id.desc())
+
+        if start is not None:
+            query = query.offset(start)
+
+        if count is not None:
+            query = query.limit(count)
+
+        return query.all()
+
+    @classmethod
+    def get_film(cls, session: Session, film_id: int) -> "Films":
+        return session.query(cls).filter(Films.id == film_id).one_or_none()
+
+    @classmethod
+    def create_film(cls, session: Session, name: str, description: str, size: int = None) -> "Films":
+        film = cls(
+            name=name,
+            description=description,
+            status=VideoFileStatus.new.value,
+            path=None,
+            size=size
+        )
+        session.add(film)
+        return film
 
 
 class FilmPieces(Base):
@@ -52,46 +79,17 @@ class FilmPieces(Base):
 
     id = Column(Integer, primary_key=True)
     film_id = Column(Integer, ForeignKey('films.id'))
-    piece_number = Column(Integer)
-    piece_size = Column(Integer)
+    number = Column(Integer)
+    size = Column(Integer)
     path = Column(String(1024))
 
-
-# TODO: move session to server
-def create_film_pieces(session: Session, film_id: int, piece_number: int, piece_size: int, path: str) -> FilmPieces:
-    film_piece = FilmPieces(
-        film_id=film_id,
-        piece_number=piece_number,
-        piece_size=piece_size,
-        path=path
-    )
-    session.add(film_piece)
-    return film_piece
-
-
-def get_all_films(session: Session, start: int, count: int) -> List[Films]:
-    query = session.query(Films).order_by(Films.id.desc())
-
-    if start is not None:
-        query = query.offset(start)
-
-    if count is not None:
-        query = query.limit(count)
-
-    return query.all()
-
-
-def get_film(session: Session, film_id: int) -> Films:
-    return session.query(Films).filter(Films.id == film_id).one_or_none()
-
-
-def create_new_film(session: Session, name: str, description: str, size: int = None) -> Films:
-    film = Films(
-        name=name,
-        description=description,
-        status=VideoFileStatus.new.value,
-        path="",
-        size=size
-    )
-    session.add(film)
-    return film
+    @classmethod
+    def create_film_piece(cls, session: Session, film_id: int, number: int, size: int, path: str) -> "FilmPieces":
+        film_piece = cls(
+            film_id=film_id,
+            number=number,
+            size=size,
+            path=path
+        )
+        session.add(film_piece)
+        return film_piece

@@ -24,5 +24,5 @@ class PatchFilmSchema(BaseModel):
 
 
 class PutVideoSchema(BaseModel):
-    piece_number: NonNegativeInt
-    piece_content: constr(min_length=1)
+    number: NonNegativeInt
+    content: constr(min_length=1)

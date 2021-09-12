@@ -48,7 +48,7 @@ class FileSystemFileStorage(IFileStorage):
             result = fi.read()
             fi.close()
             return result
-        except Exception as e:
+        except Exception:
             raise FileUtilsException(f"Error on reading {filename}")
 
     def write(self, filename: str, data: bytes) -> None:
@@ -57,7 +57,7 @@ class FileSystemFileStorage(IFileStorage):
             fo = open(storage_filename, 'wb')
             fo.write(data)
             fo.close()
-        except Exception as e:
+        except Exception:
             raise FileUtilsException(f"Error on writing {filename}")
 
     def append(self, filename: str, data: bytes) -> None:
@@ -66,7 +66,7 @@ class FileSystemFileStorage(IFileStorage):
             fo = open(storage_filename, 'ab')
             fo.write(data)
             fo.close()
-        except Exception as e:
+        except Exception:
             raise FileUtilsException(f"Error on appending {filename}")
 
     def delete(self, filename: str) -> None:

@@ -5,7 +5,7 @@ import subprocess
 
 from app.celery import celery_app
 from app.constants import VideoFileStatus
-from app.db import FilmPieces, get_session, get_film, Session, Films
+from app.db import FilmPieces, get_session, Session, Films
 from app.fileutils import upload_storage, temporary_storage, result_storage, generate_filename
 from app.config import load_config
 
@@ -32,6 +32,7 @@ def _clean_all_temporary_files(session: Session, film: Films) -> None:
     for film_piece in film.film_pieces:
         upload_storage.delete(film_piece.path)
 
+    # TODO: maybe move to db.py
     session.query(FilmPieces).filter(FilmPieces.film_id == film.id).delete()
     session.refresh(film)
 
@@ -72,7 +73,7 @@ def _convert_video_file(input_filename: str, output_filename: str) -> bool:
 def process_film(video_id: int) -> None:
     session = get_session()
 
-    film = get_film(session, video_id)
+    film = Films.get_film(session, video_id)
 
     if film is None:
         # TODO: add error

@@ -15,9 +15,7 @@ def pytest_configure(config):
     config['upload_storage'] = UPLOAD_TEST
     config['temporary_storage'] = TEMPORARY_TEST
     config['result_storage'] = RESULT_TEST
-
     config['database'] = f'sqlite:///{TEST_DB}'
-    print("pytest_configure\n")
 
 #def pytest_sessionstart(session):
 #def pytest_sessionfinish(session, exitstatus):
@@ -29,3 +27,14 @@ def pytest_unconfigure(config):
     for directory in (UPLOAD_TEST, TEMPORARY_TEST, RESULT_TEST):
         if os.path.exists(directory):
             shutil.rmtree(directory)
+
+@pytest.fixture
+def db():
+    from app.db import Base, engine
+    Base.metadata.bind = engine
+    Base.metadata.create_all()
+
+    try:
+        yield
+    finally:
+        Base.metadata.drop_all(engine)

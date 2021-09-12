@@ -6,7 +6,7 @@ from werkzeug.exceptions import HTTPException
 from app.film_converter import process_film
 from app.config import load_config
 from app.constants import VideoFileStatus
-from app.db import get_all_films, get_film, create_new_film, create_film_pieces, get_session
+from app.db import Films, FilmPieces, get_session
 from app.fileutils import upload_storage, result_storage, generate_filename
 from app.schemas import GetListSchema, CreateFilmSchema, PatchFilmSchema, PutVideoSchema
 
@@ -49,7 +49,7 @@ def video_list() -> Dict:
     data = request.args
     schema = GetListSchema(**data)
     session = get_session()
-    films = get_all_films(session, start=schema.start, count=schema.count)
+    films = Films.get_all_films(session, start=schema.start, count=schema.count)
     return {"films": [x.as_dict() for x in films]}
 
 
@@ -60,7 +60,7 @@ def create_video() -> Dict:
     session = get_session()
 
     with session.begin():
-        film = create_new_film(session, name=schema.name, description=schema.description, size=schema.size)
+        film = Films.create_film(session, name=schema.name, description=schema.description, size=schema.size)
 
     return film.as_dict()
 
@@ -71,7 +71,7 @@ def patch_video(video_id: int) -> Dict:
     schema = PatchFilmSchema(**data)
 
     session = get_session()
-    film = get_film(session, video_id)
+    film = Films.get_film(session, video_id)
 
     if film is None:
         # TODO: wrap to handler
@@ -89,7 +89,7 @@ def patch_video(video_id: int) -> Dict:
 @app.route('/api/videos/<int:video_id>', methods=['GET'])
 def get_video(video_id: int) -> Dict:
     session = get_session()
-    film = get_film(session, video_id)
+    film = Films.get_film(session, video_id)
 
     if film is None:
         # TODO: wrap to handler
@@ -103,7 +103,7 @@ def put_video_content(video_id: int) -> Dict:
     session = get_session()
     data = request.json
     schema = PutVideoSchema(**data)
-    film = get_film(session, video_id)
+    film = Films.get_film(session, video_id)
 
     if film is None:
         # TODO: wrap to handler
@@ -125,7 +125,7 @@ def put_video_content(video_id: int) -> Dict:
     run_convert = False
 
     with session.begin():
-        create_film_pieces(session, video_id, piece_number, len(decoded), filename)
+        FilmPieces.create_film_piece(session, video_id, piece_number, len(decoded), filename)
         session.refresh(film)
         # TODO: think about properties
         if film.uploaded_size > film.size:
@@ -150,7 +150,7 @@ def put_video_content(video_id: int) -> Dict:
 def get_video_content(video_id: int) -> Response:
     session = get_session()
     data = request.json
-    film = get_film(session, video_id)
+    film = Films.get_film(session, video_id)
 
     if film is None:
         return "Video not found", 404

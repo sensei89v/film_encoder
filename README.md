@@ -20,13 +20,15 @@ If you feel yourself comfortable with Gitlab CI and app deployment to cloud prov
 
 # TODO:
  * Deploy to clouds
- * Add tests
  * Add init db
  * Add download extend
  * Add Readme description
- * Add swagger
  * Add error handler
  * Add comments
  * Add http Responses as classes
  * Add filename from film
  * Sync names" videos and film
+ * Add server tests
+ * Add conveter tests
+ * Delete old pieces
+ * Test image running
