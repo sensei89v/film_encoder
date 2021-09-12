@@ -44,8 +44,8 @@ RETURN_FILE_EXTENSION = load_config()['return_video_file_extension']
 
 # ######### routing
 # TODO: Validation
-@app.route('/api/videos', methods=['GET'])
-def video_list() -> Dict:
+@app.route('/api/films', methods=['GET'])
+def film_list() -> Dict:
     data = request.args
     schema = GetListSchema(**data)
     session = get_session()
@@ -53,8 +53,8 @@ def video_list() -> Dict:
     return {"films": [x.as_dict() for x in films]}
 
 
-@app.route('/api/videos', methods=['POST'])
-def create_video() -> Dict:
+@app.route('/api/films', methods=['POST'])
+def create_film() -> Dict:
     data = request.json
     schema = CreateFilmSchema(**data)
     session = get_session()
@@ -65,13 +65,13 @@ def create_video() -> Dict:
     return film.as_dict()
 
 
-@app.route('/api/videos/<int:video_id>', methods=['PATCH'])
-def patch_video(video_id: int) -> Dict:
+@app.route('/api/films/<int:film_id>', methods=['PATCH'])
+def patch_film(film_id: int) -> Dict:
     data = request.json
     schema = PatchFilmSchema(**data)
 
     session = get_session()
-    film = Films.get_film(session, video_id)
+    film = Films.get_film(session, film_id)
 
     if film is None:
         # TODO: wrap to handler
@@ -86,10 +86,10 @@ def patch_video(video_id: int) -> Dict:
     return film.as_dict()
 
 
-@app.route('/api/videos/<int:video_id>', methods=['GET'])
-def get_video(video_id: int) -> Dict:
+@app.route('/api/films/<int:film_id>', methods=['GET'])
+def get_film(film_id: int) -> Dict:
     session = get_session()
-    film = Films.get_film(session, video_id)
+    film = Films.get_film(session, film_id)
 
     if film is None:
         # TODO: wrap to handler
@@ -98,12 +98,12 @@ def get_video(video_id: int) -> Dict:
     return film.as_dict()
 
 
-@app.route('/api/videos/<int:video_id>/content', methods=['PUT'])
-def put_video_content(video_id: int) -> Dict:
+@app.route('/api/films/<int:film_id>/content', methods=['PUT'])
+def put_film_content(film_id: int) -> Dict:
     session = get_session()
     data = request.json
     schema = PutVideoSchema(**data)
-    film = Films.get_film(session, video_id)
+    film = Films.get_film(session, film_id)
 
     if film is None:
         # TODO: wrap to handler
@@ -125,7 +125,7 @@ def put_video_content(video_id: int) -> Dict:
     run_convert = False
 
     with session.begin():
-        FilmPieces.create_film_piece(session, video_id, piece_number, len(decoded), filename)
+        FilmPieces.create_film_piece(session, film_id, piece_number, len(decoded), filename)
         session.refresh(film)
         # TODO: think about properties
         if film.uploaded_size > film.size:
@@ -140,17 +140,17 @@ def put_video_content(video_id: int) -> Dict:
         session.add(film)
 
     if run_convert:
-        process_film.delay(video_id)
+        process_film.delay(film_id)
 
     # TODO: think response
     return {}
 
 
-@app.route('/api/videos/<int:video_id>/content', methods=['GET'])
-def get_video_content(video_id: int) -> Response:
+@app.route('/api/films/<int:film_id>/content', methods=['GET'])
+def get_film_content(film_id: int) -> Response:
     session = get_session()
     data = request.json
-    film = Films.get_film(session, video_id)
+    film = Films.get_film(session, film_id)
 
     if film is None:
         return "Video not found", 404

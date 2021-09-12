@@ -70,10 +70,10 @@ def _convert_video_file(input_filename: str, output_filename: str) -> bool:
 
 
 @celery_app.task()
-def process_film(video_id: int) -> None:
+def process_film(film_id: int) -> None:
     session = get_session()
 
-    film = Films.get_film(session, video_id)
+    film = Films.get_film(session, film_id)
 
     if film is None:
         # TODO: add error
