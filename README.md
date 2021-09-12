@@ -31,4 +31,3 @@ If you feel yourself comfortable with Gitlab CI and app deployment to cloud prov
  * Add conveter tests
  * Delete old pieces
  * Test image running
- * Add install ffmpeg to docker
