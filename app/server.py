@@ -2,6 +2,7 @@ import base64
 import io
 from typing import Dict
 from flask import Flask, Response, request, jsonify, make_response, send_file
+from pydantic.error_wrappers import ValidationError
 from werkzeug.exceptions import HTTPException
 from app.film_converter import process_film
 from app.config import load_config
@@ -14,36 +15,34 @@ app = Flask(__name__)
 
 RETURN_MIMETYPE = load_config()['return_video_mimetype']
 RETURN_FILE_EXTENSION = load_config()['return_video_file_extension']
-# ######### error handling
-#def _create_error_response(name, description='', code=500):
-#    """
-#    Common error function
-#    """
-#    response = {
-#        "code": code,
-#        "name": name,
-#        "description": description
-#    }
-#    return jsonify(response), code
+######### error handling
+def _create_error_response(name, description='', code=500):
+    """
+    Common error function
+    """
+    response = {
+        "code": code,
+        "name": name,
+        "description": description
+    }
+    return jsonify(response), code
 
 
-#@app.errorhandler(HTTPException)
-#def handle_flask_exception(exception):
-#    return _create_error_response(exception.name, exception.description, exception.code)
+@app.errorhandler(HTTPException)
+def handle_flask_exception(exception):
+    return _create_error_response(exception.name, exception.description, exception.code)
 
 
-#@app.errorhandler(ValidationError)
-#def handle_validation_exception(exception):
-#    return _create_error_response("Incorrect input data", str(exception), 400)
+@app.errorhandler(ValidationError)
+def handle_validation_exception(exception):
+    return _create_error_response("validation exception", str(exception), 400)
 
-
-#@app.errorhandler(Exception)
-#def handle_common_exception(exception):
-#    return _create_error_response("internal exception", str(exception), 500)
+@app.errorhandler(Exception)
+def handle_common_exception(exception):
+    return _create_error_response("internal exception", str(exception), 500)
 
 
 # ######### routing
-# TODO: Validation
 @app.route('/api/films', methods=['GET'])
 def film_list() -> Dict:
     data = request.args
@@ -56,6 +55,10 @@ def film_list() -> Dict:
 @app.route('/api/films', methods=['POST'])
 def create_film() -> Dict:
     data = request.json
+
+    if data is None:
+        return _create_error_response('Empty body', code=400)
+
     schema = CreateFilmSchema(**data)
     session = get_session()
 
