@@ -46,11 +46,11 @@ class Films(Base):
         return sum([x.size for x in self.film_pieces])
 
     @classmethod
-    def get_all_films(cls, session: Session, start: int, count: int) -> List["Films"]:
+    def get_all_films(cls, session: Session, offset: int, count: int) -> List["Films"]:
         query = session.query(cls).order_by(Films.id.desc())
 
-        if start is not None:
-            query = query.offset(start)
+        if offset is not None:
+            query = query.offset(offset)
 
         if count is not None:
             query = query.limit(count)
@@ -62,11 +62,12 @@ class Films(Base):
         return session.query(cls).filter(Films.id == film_id).one_or_none()
 
     @classmethod
-    def create_film(cls, session: Session, name: str, description: str, size: int = None) -> "Films":
+    def create_film(cls, session: Session, name: str, description: str, size: int = None,
+                    status: int = VideoFileStatus.new.value) -> "Films":
         film = cls(
             name=name,
             description=description,
-            status=VideoFileStatus.new.value,
+            status=status,
             path=None,
             size=size
         )

@@ -9,7 +9,7 @@ MAX_FILE_SIZE = _config['max_film_size']
 
 
 class GetListSchema(BaseModel):
-    start: Optional[NonNegativeInt] = 0
+    offset: Optional[NonNegativeInt] = 0
     count: Optional[PositiveInt] = 100
 
 

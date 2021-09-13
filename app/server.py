@@ -48,7 +48,7 @@ def film_list() -> Dict:
     data = request.args
     schema = GetListSchema(**data)
     session = get_session()
-    films = Films.get_all_films(session, start=schema.start, count=schema.count)
+    films = Films.get_all_films(session, offset=schema.offset, count=schema.count)
     return {"films": [x.as_dict() for x in films]}
 
 
