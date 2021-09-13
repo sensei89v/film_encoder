@@ -4,6 +4,7 @@ import pytest
 from app.constants import VideoFileStatus
 from app.config import load_config
 from app.db import Films, get_session
+from app.fileutils import result_storage
 
 
 def test_check_not_found(client):
@@ -160,3 +161,33 @@ def test_patch_films(client, size, status, patch_data, is_same_film, status_code
     session.refresh(film)
     assert response.status_code == status_code
     assert film.size == expected_size
+
+
+@pytest.mark.parametrize("status,is_same_film,status_code", [
+    (VideoFileStatus.success.value, True, 200),
+    (VideoFileStatus.new.value, True, 400),
+    (VideoFileStatus.in_process.value, True, 400),
+    (VideoFileStatus.success.value, False, 404),
+])
+def test_download_film(client, status, is_same_film, status_code):
+    DATA = b'test-small-data'
+    FILENAME = 'name'
+
+    result_storage.write(FILENAME, DATA)
+    session = get_session()
+
+    with session.begin():
+        film = Films.create_film(session, "mytest", "desc", size=len(DATA), status=status)
+        film.path = FILENAME
+        session.add(film)
+
+    if is_same_film:
+        id = film.id
+    else:
+        id = film.id + 1
+
+    response = client.get(f'/api/films/{id}/content')
+    assert response.status_code == status_code
+
+    if status_code == 200:
+        assert response.data == DATA

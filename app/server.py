@@ -83,7 +83,7 @@ def patch_film(film_id: int) -> Dict:
         return _create_error_response('Film not found', code=404)
 
     if film.status != VideoFileStatus.new.value:
-        return _create_error_response('Film is not in new status', code=400)
+        return _create_error_response('Film is not in the "new" status', code=400)
 
     with session.begin():
         film.size = schema.size
@@ -158,10 +158,10 @@ def get_film_content(film_id: int) -> Response:
     film = Films.get_film(session, film_id)
 
     if film is None:
-        return "Video not found", 404
+        return _create_error_response('Film not found', code=404)
 
     if film.status != VideoFileStatus.success.value:
-        return "Video not found", 404
+        return _create_error_response('Film is not in the "success" status', code=400)
 
     data = result_storage.read(film.path)
 
