@@ -134,3 +134,29 @@ def test_get_films(client, input_data, expected_result, status_code):
 
     if status_code == 200:
         assert response.json == {"films": expected_result}
+
+
+@pytest.mark.parametrize("size,status,patch_data,is_same_film,status_code,expected_size,", [
+    (300, VideoFileStatus.new.value, None, True, 400, 300),
+    (None, VideoFileStatus.new.value, {}, True, 400, None),
+    (None, VideoFileStatus.new.value, {"size": 300}, True, 200, 300),
+    (400, VideoFileStatus.new.value, {"size": 600}, True, 200, 600),
+    (400, VideoFileStatus.new.value, {"size": 600}, False, 404, 400),
+    (400, VideoFileStatus.new.value, {"size": 600, "anything": 9999999}, True, 200, 600),
+    (400, VideoFileStatus.in_process.value, {"size": 600}, True, 400, 400),
+])
+def test_patch_films(client, size, status, patch_data, is_same_film, status_code, expected_size):
+    session = get_session()
+
+    with session.begin():
+        film = Films.create_film(session, "mytest", "desc", size=size, status=status)
+
+    if is_same_film:
+        id = film.id
+    else:
+        id = film.id + 1
+
+    response = client.patch(f'/api/films/{id}', json=patch_data)
+    session.refresh(film)
+    assert response.status_code == status_code
+    assert film.size == expected_size

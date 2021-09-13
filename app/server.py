@@ -71,17 +71,20 @@ def create_film() -> Dict:
 @app.route('/api/films/<int:film_id>', methods=['PATCH'])
 def patch_film(film_id: int) -> Dict:
     data = request.json
-    schema = PatchFilmSchema(**data)
 
+    if data is None:
+        return _create_error_response('Empty body', code=400)
+
+    schema = PatchFilmSchema(**data)
     session = get_session()
     film = Films.get_film(session, film_id)
 
     if film is None:
-        # TODO: wrap to handler
-        return "Film is not found", 404
+        return _create_error_response('Film not found', code=404)
 
-    # TODO: check after starting putting dataa pieces
-    # TODO: check process
+    if film.status != VideoFileStatus.new.value:
+        return _create_error_response('Film is not in new status', code=400)
+
     with session.begin():
         film.size = schema.size
         session.add(film)
