@@ -95,8 +95,7 @@ def get_film(film_id: int) -> Dict:
     film = Films.get_film(session, film_id)
 
     if film is None:
-        # TODO: wrap to handler
-        return "Film is not found", 404
+        return _create_error_response('Film not found', code=404)
 
     return film.as_dict()
 

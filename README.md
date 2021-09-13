@@ -23,9 +23,7 @@ If you feel yourself comfortable with Gitlab CI and app deployment to cloud prov
  * Add init db
  * Add download extend
  * Add Readme description
- * Add error handler
  * Add comments
- * Add http Responses as classes
  * Add filename from film
  * Add server tests
  * Add conveter tests

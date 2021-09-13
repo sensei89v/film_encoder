@@ -16,7 +16,7 @@ def test_check_not_found(client):
     }
 
 
-def test_correct_create_film(db, client):
+def test_correct_create_film(client):
     # Validation
     data = {
         "name": "my name",
@@ -52,3 +52,21 @@ def test_incorrect_create_film(client, data):
     assert response.status_code == 400
 
 
+def test_get_film(client):
+    response = client.get('/api/films/22222')
+    assert response.status_code == 404
+    session = get_session()
+    with session.begin():
+        film = Films.create_film(session, "mytest", "mydescription", 200)
+        film.status = VideoFileStatus.failed.value
+        session.add(film)
+
+    response = client.get(f'/api/films/{film.id}')
+    assert response.status_code == 200
+    assert response.json == {
+        'id': film.id,
+        'name': "mytest",
+        'description': "mydescription",
+        'status': VideoFileStatus.failed.name,
+        'size': 200
+    }
